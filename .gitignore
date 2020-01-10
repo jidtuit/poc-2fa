@@ -40,3 +40,4 @@ nbdist/
 
 # Functional Tests output
 functional-tests/.gradle
+/poc2fa/
