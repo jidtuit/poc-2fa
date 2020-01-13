@@ -33,7 +33,7 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClassName = 'org.jid.poc.poc2fa.wstrange.AppV2'
+    mainClassName = 'org.jid.poc.poc2fa.wstrange.AppV3'
     sourceCompatibility = JavaVersion.VERSION_1_8
 }
 

@@ -1,10 +1,13 @@
 package org.jid.poc.poc2fa.wstrange;
 
 import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
 import com.google.zxing.WriterException;
+import com.google.zxing.client.j2se.MatrixToImageConfig;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 import com.warrenstrange.googleauth.GoogleAuthenticatorConfig;
 import com.warrenstrange.googleauth.GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder;
@@ -13,17 +16,27 @@ import com.warrenstrange.googleauth.GoogleAuthenticatorKey.Builder;
 import com.warrenstrange.googleauth.GoogleAuthenticatorQRGenerator;
 import com.warrenstrange.googleauth.HmacHashFunction;
 import com.warrenstrange.googleauth.KeyRepresentation;
+import java.awt.AlphaComposite;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
+import javax.imageio.ImageIO;
 
-public class AppV2 {
+public class AppV3 {
+
+    private static final String LOGO_FILE = "ClarityLogoIsotype24.jpg";
 
     public static void main(String[] args) throws IOException, WriterException {
-        new AppV2().run();
+        new AppV3().run();
     }
 
     public void run() throws IOException, WriterException {
@@ -46,8 +59,6 @@ public class AppV2 {
         String qr = getQRCodeImage(otpUrl, 200, 200);
         System.out.println("qr = " + qr);
         System.out.println("qr.length() = " + qr.length());
-        System.out.println("qr.getBytes(StandardCharsets.UTF_8).length = " + qr
-          .getBytes(StandardCharsets.UTF_8).length);
 
         try(Scanner scanner = new Scanner(System.in)) {
             System.out.println("Insert code: ");
@@ -85,11 +96,43 @@ public class AppV2 {
     private String getQRCodeImage(String otpauth, int width, int height)
         throws WriterException, IOException {
 
-        QRCodeWriter qrCodeWriter = new QRCodeWriter();
-        BitMatrix bitMatrix = qrCodeWriter.encode(otpauth, BarcodeFormat.QR_CODE, width, height);
+        // Create new configuration that specifies the error correction. Mandatory if logo.
+        Map<EncodeHintType, ErrorCorrectionLevel> hints = new HashMap<>();
+        hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.H);
 
+        // Create QR without logo
+        QRCodeWriter qrCodeWriter = new QRCodeWriter();
+        BitMatrix bitMatrix = qrCodeWriter.encode(otpauth, BarcodeFormat.QR_CODE, width, height, hints);
+
+        // Load QR image
+        MatrixToImageConfig matrixToImageConfig = new MatrixToImageConfig(0xFF000000, 0xFFA8E6CA);
+        BufferedImage qrBImage = MatrixToImageWriter.toBufferedImage(bitMatrix, matrixToImageConfig);
+
+        // Load logo
+        File logoFile = new File(getClass().getClassLoader().getResource(LOGO_FILE).getFile());
+        BufferedImage logoBImage = ImageIO.read(logoFile);
+
+        // Calculate the delta height and width between QR code and logo
+        int deltaHeight = qrBImage.getHeight() - logoBImage.getHeight();
+        int deltaWidth = qrBImage.getWidth() - logoBImage.getWidth();
+
+        // Initialize combined image
+        BufferedImage combined = new BufferedImage(qrBImage.getHeight(), qrBImage.getWidth(), BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = (Graphics2D) combined.getGraphics();
+
+        // Write QR code to new image at position 0/0
+        g.drawImage(qrBImage, 0, 0, null);
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
+
+        // Write logo into combine image at position (deltaWidth / 2) and
+        // (deltaHeight / 2). Background: Left/Right and Top/Bottom must be
+        // the same space for the logo to be centered
+        g.drawImage(logoBImage, (int) Math.round(deltaWidth / 2), (int) Math.round(deltaHeight / 2), null);
+
+        // Write combined image as PNG to OutputStream
         ByteArrayOutputStream imgOutputStream = new ByteArrayOutputStream();
-        MatrixToImageWriter.writeToStream(bitMatrix, "PNG", imgOutputStream);
+        ImageIO.write(combined, "PNG", imgOutputStream);
+
         byte[] imgBytes = imgOutputStream.toByteArray();
 
         String imgStr = Base64.getEncoder()
