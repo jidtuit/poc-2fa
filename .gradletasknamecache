@@ -1,4 +1,6 @@
 run
+runShadow
+startShadowScripts
 assemble
 build
 buildDependents
@@ -10,9 +12,13 @@ testClasses
 init
 wrapper
 assembleDist
+assembleShadowDist
 distTar
 distZip
 installDist
+installShadowDist
+shadowDistTar
+shadowDistZip
 javadoc
 buildEnvironment
 components
@@ -25,6 +31,8 @@ outgoingVariants
 projects
 properties
 tasks
+knows
+shadowJar
 check
 test
 compileJava
@@ -37,6 +45,8 @@ Pattern:
 Pattern:
 Pattern:
 run
+runShadow
+startShadowScripts
 assemble
 build
 buildDependents
@@ -48,9 +58,13 @@ testClasses
 init
 wrapper
 assembleDist
+assembleShadowDist
 distTar
 distZip
 installDist
+installShadowDist
+shadowDistTar
+shadowDistZip
 javadoc
 buildEnvironment
 components
@@ -63,6 +77,8 @@ outgoingVariants
 projects
 properties
 tasks
+knows
+shadowJar
 check
 test
 compileJava

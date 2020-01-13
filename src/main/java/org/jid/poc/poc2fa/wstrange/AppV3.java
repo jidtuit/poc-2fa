@@ -18,10 +18,12 @@ import com.warrenstrange.googleauth.HmacHashFunction;
 import com.warrenstrange.googleauth.KeyRepresentation;
 import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
+import java.awt.im.InputContext;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -109,7 +111,7 @@ public class AppV3 {
         BufferedImage qrBImage = MatrixToImageWriter.toBufferedImage(bitMatrix, matrixToImageConfig);
 
         // Load logo
-        File logoFile = new File(getClass().getClassLoader().getResource(LOGO_FILE).getFile());
+        InputStream logoFile = getClass().getClassLoader().getResourceAsStream(LOGO_FILE);
         BufferedImage logoBImage = ImageIO.read(logoFile);
 
         // Calculate the delta height and width between QR code and logo
